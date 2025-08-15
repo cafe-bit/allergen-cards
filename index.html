@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -6,548 +7,1447 @@
 <title>Allergen Card Management System</title>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{
-        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-        background-color:#f9fafb;padding:24px;min-height:100vh;overflow-x:hidden
-    }
-    .container{max-width:1400px;margin:0 auto}
-    .title{font-size:2rem;font-weight:bold;color:#111827;margin-bottom:32px}
-    .main-grid{display:grid;grid-template-columns:1fr 3fr;gap:32px}
-    .left-panel{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:24px;height:fit-content}
-    .panel-title{font-size:1.25rem;font-weight:600;color:#111827;margin-bottom:16px}
-    .search-box{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:.875rem;margin-bottom:16px}
-    .search-box:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
-    .controls-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-    .sort-select{flex:1;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:.875rem}
-    .btn-small{padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:.875rem;cursor:pointer;display:flex;align-items:center;gap:4px}
-    .btn-small:hover{background:#f9fafb}
-    .archived-cards{max-height:400px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:6px}
-    .archived-card{padding:12px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-    .archived-card-actions{display:flex;gap:8px;align-items:center}
-    .archived-card:hover{background:#f9fafb}
-    .archived-card:last-child{border-bottom:none}
-    .archived-card-info{flex:1}
-    .archived-card-name{font-weight:500;color:#111827;font-size:.875rem}
-    .archived-card-allergens{font-size:.75rem;color:#6b7280;margin-top:2px}
-    .restore-btn{background:#059669;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:.75rem;cursor:pointer}
-    .restore-btn:hover{background:#047857}
-    .delete-archived-btn{background:#dc2626;color:#fff;border:none;padding:6px;border-radius:4px;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0}
-    .delete-archived-btn:hover{background:#b91c1c}
-    .right-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .select-controls{display:flex;align-items:center;gap:16px}
-    .select-all-container{display:flex;align-items:center;gap:8px}
-    .select-all-checkbox{width:16px;height:16px;cursor:pointer}
-    .select-info{color:#6b7280;font-size:.875rem}
-    .print-btn{background:#059669;color:#fff;padding:8px 16px;border-radius:6px;border:none;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px}
-    .print-btn:hover{background:#047857}
-    .print-btn:disabled{background:#d1d5db;cursor:not-allowed}
-    .cards-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
-    .card{aspect-ratio:3/4;border:2px dashed #d1d5db;border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;position:relative;background:#fff}
-    .card:hover{transform:scale(1.05);box-shadow:0 4px 6px rgba(0,0,0,.1)}
-    .card.active{border-style:solid;border-color:#d1d5db;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-    .card.empty{background:#f9fafb;border-color:#d1d5db}
-    .card.empty:hover{border-color:#9ca3af}
-    .card.selected{border-color:#3b82f6;background:#eff6ff}
-    .card-checkbox{position:absolute;top:8px;right:8px;width:16px;height:16px;z-index:10}
-    /* On-screen header styling inside cards */
-    .brand-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px}
-    .brand-left{font-family:"Times New Roman",Times,serif;font-weight:700;letter-spacing:.04em;color:#6b7280}
-    .brand-right{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:800;color:#6b8e23}
-    .brand-hr{height:1px;background:#d1d5db;margin:2px auto 8px auto;width:85%}
-    .card-name{font-weight:700;color:#111827;font-size:.9rem;margin-bottom:8px;line-height:1.2;text-align:center}
-    .card-allergens{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;overflow:hidden;max-height:calc(100% - 60px);justify-content:center}
-    .card-allergen-icon{font-size:1.125rem}
-    .card-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af}
-    .card-edit-icon{margin-top:8px;display:flex;justify-content:center;color:#9ca3af}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
-    .modal.hidden{display:none}
-    .modal-content{background:#fff;border-radius:8px;box-shadow:0 20px 25px rgba(0,0,0,.15);max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
-    .modal-header{display:none}
-    .modal-body{padding:24px 16px 16px 16px;position:relative}
-    .modal-close-btn{position:absolute;top:8px;right:8px;color:#9ca3af;cursor:pointer;background:none;border:none;padding:4px;border-radius:4px}
-    .modal-close-btn:hover{color:#6b7280;background:#f3f4f6}
-    .form-group{margin-bottom:16px}
-    .label{display:block;font-size:.875rem;font-weight:500;color:#374151;margin-bottom:8px}
-    .input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:1rem}
-    .input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
-    .spell-check{position:relative}
-    .spell-suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 6px 6px;max-height:120px;overflow-y:auto;z-index:10;display:none}
-    .spell-suggestion{padding:8px 12px;cursor:pointer;font-size:.875rem;border-bottom:1px solid #f3f4f6}
-    .spell-suggestion:hover{background:#f9fafb}
-    .spell-suggestion:last-child{border-bottom:none}
-    .allergen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .allergen-btn{padding:8px;border-radius:6px;border:1px solid #d1d5db;background:#f9fafb;color:#374151;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
-    .allergen-btn:hover{background:#f3f4f6}
-    .allergen-btn.selected{border-color:currentColor}
-    .allergen-checkbox{width:14px;height:14px;flex-shrink:0}
-    .modal-footer{display:flex;align-items:center;justify-content:space-between;padding:16px;border-top:1px solid #e5e7eb;background:#f9fafb}
-    .modal-actions{display:flex;gap:8px}
-    .btn-secondary{background:#fff;color:#374151;border:1px solid #d1d5db;padding:8px 12px;border-radius:6px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px}
-    .btn-secondary:hover{background:#f9fafb}
-    .btn-danger{background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 12px;border-radius:6px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px}
-    .btn-danger:hover{background:#fef2f2}
-    .btn-primary{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px}
-    .btn-primary:hover{background:#2563eb}
-    .btn-primary:disabled{background:#d1d5db;cursor:not-allowed}
-    .hidden-file-input{display:none}
-    /* Allergen colors (used in modal selection) */
-    .bg-amber-100{background:#fef3c7;color:#92400e}.bg-blue-100{background:#dbeafe;color:#1e40af}
-    .bg-orange-100{background:#fed7aa;color:#c2410c}.bg-orange-200{background:#fed7aa;color:#9a3412}
-    .bg-red-100{background:#fecaca;color:#dc2626}.bg-yellow-100{background:#fef3c7;color:#d97706}
-    .bg-green-100{background:#dcfce7;color:#16a34a}.bg-cyan-100{background:#cffafe;color:#0891b2}
-    .bg-purple-100{background:#e9d5ff;color:#7c3aed}.bg-amber-50{background:#fffbeb;color:#d97706}
-    .bg-emerald-100{background:#d1fae5;color:#059669}.bg-lime-100{background:#ecfccb;color:#65a30d}
-    /* Confirm dialog */
-    .confirm-dialog{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60}
-    .confirm-dialog.hidden{display:none}
-    .confirm-content{background:#fff;border-radius:8px;box-shadow:0 20px 25px rgba(0,0,0,.15);max-width:400px;width:100%}
-    .confirm-header{padding:20px 20px 0 20px}
-    .confirm-title{font-size:1.125rem;font-weight:600;color:#111827;margin-bottom:8px}
-    .confirm-message{color:#6b7280;font-size:.875rem;line-height:1.4}
-    .confirm-actions{display:flex;gap:8px;padding:20px;justify-content:flex-end}
-    .confirm-cancel{background:#fff;color:#374151;border:1px solid #d1d5db;padding:8px 16px;border-radius:6px;font-weight:500;cursor:pointer}
-    .confirm-cancel:hover{background:#f9fafb}
-    .confirm-delete{background:#dc2626;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:500;cursor:pointer}
-    .confirm-delete:hover{background:#b91c1c}
-    @media (max-width:1024px){.main-grid{grid-template-columns:1fr}.cards-grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:768px){.cards-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            padding: 24px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 32px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 32px;
+        }
+        
+        .left-panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            height: fit-content;
+        }
+        
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .controls-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .sort-select {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-small:hover {
+            background: #f9fafb;
+        }
+        
+        .archived-cards {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        
+        .archived-card {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .archived-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .archived-card:hover {
+            background: #f9fafb;
+        }
+        
+        .archived-card:last-child {
+            border-bottom: none;
+        }
+        
+        .archived-card-info {
+            flex: 1;
+        }
+        
+        .archived-card-name {
+            font-weight: 500;
+            color: #111827;
+            font-size: 0.875rem;
+        }
+        
+        .archived-card-allergens {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        
+        .restore-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        
+        .restore-btn:hover {
+            background: #047857;
+        }
+        
+        .delete-archived-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        
+        .delete-archived-btn:hover {
+            background: #b91c1c;
+        }
+        
+        .right-panel {
+            
+        }
+        
+        .right-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .select-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .select-all-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .select-info {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .print-btn {
+            background: #059669;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .print-btn:hover {
+            background: #047857;
+        }
+        
+        .print-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+        
+        .card {
+            aspect-ratio: 3/4;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card.active {
+            background: white;
+            border-style: solid;
+            border-color: #d1d5db;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card.empty {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .card.empty:hover {
+            border-color: #9ca3af;
+        }
+        
+        .card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .card-checkbox {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 16px;
+            height: 16px;
+            z-index: 10;
+        }
+        
+        .card-name {
+            font-weight: 600;
+            color: #111827;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            margin-top: 20px;
+        }
+        
+        .card-allergens {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-content: flex-start;
+            overflow: hidden;
+            max-height: calc(100% - 60px);
+        }
+        
+        .card-allergen-icon {
+            font-size: 1.125rem;
+        }
+        
+        .card-empty {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            margin-top: 20px;
+        }
+        
+        .card-edit-icon {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            color: #9ca3af;
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 50;
+        }
+        
+        .modal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: none;
+        }
+        
+        .modal-body {
+            padding: 24px 16px 16px 16px;
+            position: relative;
+        }
+        
+        .modal-close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        
+        .modal-close-btn:hover {
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .spell-check {
+            position: relative;
+        }
+        
+        .spell-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 120px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+        
+        .spell-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .spell-suggestion:hover {
+            background: #f9fafb;
+        }
+        
+        .spell-suggestion:last-child {
+            border-bottom: none;
+        }
+        
+        .allergen-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .allergen-btn {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .allergen-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .allergen-btn.selected {
+            border-color: currentColor;
+        }
+        
+        .allergen-checkbox {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+        
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+        
+        .btn-danger {
+            background: white;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-danger:hover {
+            background: #fef2f2;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-primary:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .hidden-file-input {
+            display: none;
+        }
+        
+        /* Allergen colors */
+        .bg-amber-100 { background-color: #fef3c7; color: #92400e; }
+        .bg-blue-100 { background-color: #dbeafe; color: #1e40af; }
+        .bg-orange-100 { background-color: #fed7aa; color: #c2410c; }
+        .bg-orange-200 { background-color: #fed7aa; color: #9a3412; }
+        .bg-red-100 { background-color: #fecaca; color: #dc2626; }
+        .bg-yellow-100 { background-color: #fef3c7; color: #d97706; }
+        .bg-green-100 { background-color: #dcfce7; color: #16a34a; }
+        .bg-cyan-100 { background-color: #cffafe; color: #0891b2; }
+        .bg-purple-100 { background-color: #e9d5ff; color: #7c3aed; }
+        .bg-amber-50 { background-color: #fffbeb; color: #d97706; }
+        .bg-emerald-100 { background-color: #d1fae5; color: #059669; }
+        .bg-lime-100 { background-color: #ecfccb; color: #65a30d; }
+        
+        /* Custom confirmation dialog */
+        .confirm-dialog {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 60;
+        }
+        
+        .confirm-dialog.hidden {
+            display: none;
+        }
+        
+        .confirm-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .confirm-header {
+            padding: 20px 20px 0 20px;
+        }
+        
+        .confirm-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .confirm-message {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            gap: 8px;
+            padding: 20px;
+            justify-content: flex-end;
+        }
+        
+        .confirm-cancel {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .confirm-cancel:hover {
+            background: #f9fafb;
+        }
+        
+        .confirm-delete {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .confirm-delete:hover {
+            background: #b91c1c;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    
+body { overflow-x: hidden; }</style>
 </head>
 <body>
 <div class="container">
-    <h1 class="title">Allergen Card Management</h1>
-
-    <div class="main-grid">
-        <!-- Left Panel - Archive Management -->
-        <div class="left-panel">
-            <h2 class="panel-title">Archived Cards</h2>
-            <input class="search-box" id="searchBox" placeholder="Search archived cards..." type="text"/>
-            <div class="controls-row">
-                <select class="sort-select" id="sortSelect">
-                    <option value="recent">Recent First</option>
-                    <option value="alphabetical">A-Z</option>
-                    <option value="allergen-count">By Allergen Count</option>
-                </select>
-                <button class="btn-small" id="exportBtn"><i data-lucide="download" size="14"></i>Export</button>
-                <button class="btn-small" id="importBtn"><i data-lucide="upload" size="14"></i>Import</button>
-            </div>
-            <input accept=".csv" class="hidden-file-input" id="fileInput" type="file"/>
-            <div class="archived-cards" id="archivedCards"></div>
-        </div>
-
-        <!-- Right Panel - Active Cards -->
-        <div class="right-panel">
-            <div class="right-header">
-                <div class="select-controls">
-                    <div class="select-all-container">
-                        <input class="select-all-checkbox" id="selectAllCheckbox" type="checkbox"/>
-                        <label for="selectAllCheckbox">Select All</label>
-                    </div>
-                    <span class="select-info" id="selectInfo">Check cards to include in print</span>
-                </div>
-                <button class="print-btn" disabled id="printBtn"><i data-lucide="printer"></i>Print Selected</button>
-            </div>
-            <div class="cards-grid" id="cardsGrid"></div>
-        </div>
-    </div>
+<h1 class="title">Allergen Card Management</h1>
+<div class="main-grid">
+<!-- Left Panel - Archive Management -->
+<div class="left-panel">
+<h2 class="panel-title">Archived Cards</h2>
+<input class="search-box" id="searchBox" placeholder="Search archived cards..." type="text"/>
+<div class="controls-row">
+<select class="sort-select" id="sortSelect">
+<option value="recent">Recent First</option>
+<option value="alphabetical">A-Z</option>
+<option value="allergen-count">By Allergen Count</option>
+</select>
+<button class="btn-small" id="exportBtn">
+<i data-lucide="download" size="14"></i>
+                        Export
+                    </button>
+<button class="btn-small" id="importBtn">
+<i data-lucide="upload" size="14"></i>
+                        Import
+                    </button>
 </div>
-
+<input accept=".csv" class="hidden-file-input" id="fileInput" type="file"/>
+<div class="archived-cards" id="archivedCards">
+<!-- Archived cards will be populated by JavaScript -->
+</div>
+</div>
+<!-- Right Panel - Active Cards -->
+<div class="right-panel">
+<div class="right-header">
+<div class="select-controls">
+<div class="select-all-container">
+<input class="select-all-checkbox" id="selectAllCheckbox" type="checkbox"/>
+<label for="selectAllCheckbox">Select All</label>
+</div>
+<span class="select-info" id="selectInfo">Check cards to include in print</span>
+</div>
+<button class="print-btn" disabled="" id="printBtn">
+<i data-lucide="printer"></i>
+                        Print Selected
+                    </button>
+</div>
+<div class="cards-grid" id="cardsGrid">
+<!-- Cards will be populated by JavaScript -->
+</div>
+</div>
+</div>
+</div>
 <!-- Modal -->
 <div class="modal hidden" id="modal">
-    <div class="modal-content">
-        <div class="modal-body">
-            <button class="modal-close-btn" id="modalClose"><i data-lucide="x"></i></button>
-            <div class="form-group">
-                <label class="label">Dish Name</label>
-                <div class="spell-check">
-                    <input class="input" id="modalDishName" placeholder="Enter dish name" spellcheck="true" type="text"/>
-                    <div class="spell-suggestions" id="spellSuggestions"></div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="label">Select Allergens</label>
-                <div class="allergen-grid" id="modalAllergenGrid"></div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <div class="modal-actions" id="modalActions"></div>
-            <button class="btn-primary" id="saveBtn"><i data-lucide="save"></i>Save</button>
-        </div>
-    </div>
+<div class="modal-content">
+<div class="modal-body">
+<button class="modal-close-btn" id="modalClose">
+<i data-lucide="x"></i>
+</button>
+<div class="form-group">
+<label class="label">Dish Name</label>
+<div class="spell-check">
+<input class="input" id="modalDishName" placeholder="Enter dish name" spellcheck="true" type="text"/>
+<div class="spell-suggestions" id="spellSuggestions"></div>
 </div>
-
+</div>
+<div class="form-group">
+<label class="label">Select Allergens</label>
+<div class="allergen-grid" id="modalAllergenGrid">
+<!-- Modal allergen buttons will be populated by JavaScript -->
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<div class="modal-actions" id="modalActions">
+<!-- Action buttons will be populated by JavaScript -->
+</div>
+<button class="btn-primary" id="saveBtn">
+<i data-lucide="save"></i>
+                    Save
+                </button>
+</div>
+</div>
+</div>
 <!-- Custom Confirmation Dialog -->
 <div class="confirm-dialog hidden" id="confirmDialog">
-    <div class="confirm-content">
-        <div class="confirm-header">
-            <div class="confirm-title">Delete Archived Card</div>
-            <div class="confirm-message">Are you sure you want to permanently delete this archived card? This action cannot be undone.</div>
-        </div>
-        <div class="confirm-actions">
-            <button class="confirm-cancel" id="confirmCancel">Cancel</button>
-            <button class="confirm-delete" id="confirmDelete">Delete</button>
-        </div>
-    </div>
+<div class="confirm-content">
+<div class="confirm-header">
+<div class="confirm-title">Delete Archived Card</div>
+<div class="confirm-message">Are you sure you want to permanently delete this archived card? This action cannot be undone.</div>
 </div>
-
+<div class="confirm-actions">
+<button class="confirm-cancel" id="confirmCancel">Cancel</button>
+<button class="confirm-delete" id="confirmDelete">Delete</button>
+</div>
+</div>
+</div>
 <script>
-/* ---------- Icons ---------- */
-function initIcons(){if(typeof lucide!=='undefined'){lucide.createIcons();}}
-window.addEventListener('load',()=>setTimeout(initIcons,100));
-
-/* ---------- State ---------- */
-let cards = Array(10).fill(null).map((_,i)=>({id:i,name:'',allergens:[],isActive:false,isSelected:false}));
-let archivedCards = [];
-let editingCard=null,isModalOpen=false,searchTerm='',sortOrder='recent';
-
-const allergenOptions=[
-  {id:'coconut',name:'Coconut',icon:'🥥',png:'coconut.png',color:'bg-amber-50'},
-  {id:'eggs',name:'Eggs',icon:'🥚',png:'egg.png',color:'bg-yellow-100'},
-  {id:'fish',name:'Fish',icon:'🐟',png:'fish.png',color:'bg-cyan-100'},
-  {id:'milk',name:'Milk',icon:'🥛',png:'milk.png',color:'bg-blue-100'},
-  {id:'peanuts',name:'Peanuts',icon:'🥜',png:'peanut.png',color:'bg-orange-200'},
-  {id:'sesame',name:'Sesame',icon:'🫰',png:'sesame.png',color:'bg-purple-100'},
-  {id:'shellfish',name:'Shellfish',icon:'🦐',png:'shellfish.png',color:'bg-red-100'},
-  {id:'soy',name:'Soy',icon:'🫘',png:'soy.png',color:'bg-green-100'},
-  {id:'treenuts',name:'Tree Nuts',icon:'🌰',png:'treenuts.png',color:'bg-orange-100'},
-  {id:'vegan',name:'Vegan',icon:'🌱',png:'vegan.png',color:'bg-lime-100'},
-  {id:'vegetarian',name:'Vegetarian',icon:'🥬',png:'vegetarian.png',color:'bg-emerald-100'},
-  {id:'wheat',name:'Wheat/Gluten',icon:'🌾',png:'wheatgluten.png',color:'bg-amber-100'}
-];
-
-/* ---------- DOM ---------- */
-const cardsGrid=document.getElementById('cardsGrid');
-const printBtn=document.getElementById('printBtn');
-const selectAllCheckbox=document.getElementById('selectAllCheckbox');
-const selectInfo=document.getElementById('selectInfo');
-const searchBox=document.getElementById('searchBox');
-const sortSelect=document.getElementById('sortSelect');
-const exportBtn=document.getElementById('exportBtn');
-const importBtn=document.getElementById('importBtn');
-const fileInput=document.getElementById('fileInput');
-const archivedCardsContainer=document.getElementById('archivedCards');
-const modal=document.getElementById('modal');
-const modalDishName=document.getElementById('modalDishName');
-const modalAllergenGrid=document.getElementById('modalAllergenGrid');
-const modalClose=document.getElementById('modalClose');
-const saveBtn=document.getElementById('saveBtn');
-const modalActions=document.getElementById('modalActions');
-const spellSuggestions=document.getElementById('spellSuggestions');
-const confirmDialog=document.getElementById('confirmDialog');
-const confirmCancel=document.getElementById('confirmCancel');
-const confirmDelete=document.getElementById('confirmDelete');
-
-let pendingDeleteCardId=null,spellCheckTimeout=null;
-
-/* ---------- Helpers ---------- */
-function createAllergenButton(allergen,isSelected,onClick){
-  const button=document.createElement('button');
-  button.className=`allergen-btn ${isSelected?'selected '+allergen.color:''}`;
-  const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.className='allergen-checkbox';checkbox.checked=isSelected;
-  const content=document.createElement('span');content.innerHTML=`${allergen.icon} ${allergen.name}`;
-  button.appendChild(checkbox);button.appendChild(content);button.onclick=onClick;return button;
-}
-function renderModalAllergenGrid(){
-  modalAllergenGrid.innerHTML='';
-  allergenOptions.forEach(a=>{
-    const isSel=editingCard&&editingCard.allergens.includes(a.id);
-    modalAllergenGrid.appendChild(createAllergenButton(a,isSel,()=>handleAllergenToggle(a.id)));
-  });
-}
-function toTitleCase(str){
-  const exceptions=['and','or','but','nor','for','yet','so','a','an','the','at','by','for','in','of','on','to','up','as','is','it'];
-  return str.toLowerCase().split(' ').map((w,i)=> (i===0||!exceptions.includes(w))? w.charAt(0).toUpperCase()+w.slice(1):w ).join(' ');
-}
-
-/* ---------- Render Cards (with branding header) ---------- */
-function renderCards(){
-  cardsGrid.innerHTML='';
-  cards.forEach((card,index)=>{
-    const el=document.createElement('div');
-    el.className=`card ${card.isActive?'active':'empty'} ${card.isSelected&&card.isActive?'selected':''}`;
-
-    if(card.isActive){
-      const cb=document.createElement('input');
-      cb.type='checkbox';cb.className='card-checkbox';cb.checked=card.isSelected;
-      cb.addEventListener('click',e=>{e.stopPropagation();toggleCardSelection(index);});
-      el.appendChild(cb);
-    }
-
-    el.addEventListener('click',e=>{ if(!e.target.classList.contains('card-checkbox')) openCardModal(index); });
-
-    if(card.isActive){
-      // Branding row + short HR
-      const brand=document.createElement('div');
-      brand.className='brand-row';
-      brand.innerHTML=`
-        <div class="brand-left" style="font-size:.72rem;">SMITH COLLEGE</div>
-        <div class="brand-right" style="font-size:.76rem;">DINING</div>
-      `;
-      el.appendChild(brand);
-      const hr=document.createElement('div');hr.className='brand-hr';el.appendChild(hr);
-
-      const nameDiv=document.createElement('div');
-      nameDiv.className='card-name';
-      nameDiv.textContent=card.name;
-      el.appendChild(nameDiv);
-
-      const allergensDiv=document.createElement('div');
-      allergensDiv.className='card-allergens';
-      const showIds=card.allergens.slice(0,10); // up to two rows total
-      allergensDiv.innerHTML=showIds.map(id=>{
-        const a=allergenOptions.find(opt=>opt.id===id);
-        return a? `<span class="card-allergen-icon" title="${a.name}">${a.icon}</span>`:'';
-      }).join('');
-      el.appendChild(allergensDiv);
-
-      const edit=document.createElement('div');
-      edit.className='card-edit-icon';edit.innerHTML='<i data-lucide="edit-3" size="16"></i>';
-      el.appendChild(edit);
-    }else{
-      const empty=document.createElement('div');
-      empty.className='card-empty';
-      empty.innerHTML=`<i data-lucide="plus" size="32"></i><span style="font-size:.75rem;text-align:center;margin-top:8px;">Click to add card</span>`;
-      el.appendChild(empty);
-    }
-
-    cardsGrid.appendChild(el);
-  });
-  initIcons();
-  updateSelectionInfo();
-}
-function toggleCardSelection(i){
-  if(cards[i].isActive){cards[i].isSelected=!cards[i].isSelected;renderCards();updateSelectAllState();}
-}
-function updateSelectionInfo(){
-  const selected=cards.filter(c=>c.isActive&&c.isSelected).length;
-  const active=cards.filter(c=>c.isActive).length;
-  selectInfo.textContent=selected===0?'Check cards to include in print':`${selected} of ${active} cards selected`;
-  printBtn.disabled=selected===0;
-}
-function updateSelectAllState(){
-  const active=cards.filter(c=>c.isActive), sel=active.filter(c=>c.isSelected);
-  if(sel.length===0){selectAllCheckbox.checked=false;selectAllCheckbox.indeterminate=false;}
-  else if(sel.length===active.length){selectAllCheckbox.checked=true;selectAllCheckbox.indeterminate=false;}
-  else{selectAllCheckbox.checked=false;selectAllCheckbox.indeterminate=true;}
-  updateSelectionInfo();
-}
-function handleSelectAll(){
-  const active=cards.filter(c=>c.isActive);
-  const allSelected=active.every(c=>c.isSelected);
-  cards.forEach(c=>{if(c.isActive)c.isSelected=!allSelected;});
-  renderCards();updateSelectAllState();
-}
-
-/* ---------- Modal CRUD ---------- */
-function handleAllergenToggle(id){
-  if(editingCard.allergens.includes(id)){
-    editingCard.allergens=editingCard.allergens.filter(x=>x!==id);
-  }else{editingCard.allergens.push(id);}
-  renderModalAllergenGrid();updateSaveButton();
-}
-function updateSaveButton(){saveBtn.disabled=!editingCard||!editingCard.name.trim();}
-function openCardModal(idx){
-  const c=cards[idx];
-  editingCard={...c,allergens:[...c.allergens],index:idx};
-  modalDishName.value=editingCard.name;
-  // Actions
-  modalActions.innerHTML='';
-  if(editingCard.isActive){
-    const arch=document.createElement('button');
-    arch.className='btn-secondary';arch.innerHTML='<i data-lucide="archive"></i> Archive';arch.onclick=archiveCard;
-    const del=document.createElement('button');
-    del.className='btn-danger';del.innerHTML='<i data-lucide="trash-2"></i> Delete';del.onclick=deleteCard;
-    modalActions.appendChild(arch);modalActions.appendChild(del);
-  }
-  renderModalAllergenGrid();updateSaveButton();
-  modal.classList.remove('hidden');isModalOpen=true;initIcons();
-}
-function closeModal(){modal.classList.add('hidden');isModalOpen=false;editingCard=null;}
-function saveCard(){
-  if(!editingCard||!editingCard.name.trim())return;
-  const formatted=toTitleCase(editingCard.name.trim());
-  cards[editingCard.index]={...cards[editingCard.index],name:formatted,allergens:[...editingCard.allergens],isActive:true};
-  renderCards();closeModal();
-}
-function archiveCard(){
-  const c=cards[editingCard.index];
-  if(c.isActive){
-    archivedCards.unshift({id:'arch_'+Date.now(),name:c.name,allergens:[...c.allergens],dateArchived:new Date()});
-    cards[editingCard.index]={id:editingCard.index,name:'',allergens:[],isActive:false,isSelected:false};
-    renderCards();renderArchivedCards();
-  }
-  closeModal();
-}
-function deleteCard(){
-  cards[editingCard.index]={id:editingCard.index,name:'',allergens:[],isActive:false,isSelected:false};
-  renderCards();closeModal();
-}
-
-/* ---------- Archive List ---------- */
-function deleteArchivedCard(id){pendingDeleteCardId=id;confirmDialog.classList.remove('hidden');}
-function confirmDeleteArchivedCard(){
-  if(pendingDeleteCardId){archivedCards=archivedCards.filter(c=>c.id!==pendingDeleteCardId);renderArchivedCards();pendingDeleteCardId=null;}
-  confirmDialog.classList.add('hidden');
-}
-function cancelDeleteArchivedCard(){pendingDeleteCardId=null;confirmDialog.classList.add('hidden');}
-function restoreCard(ac){
-  const i=cards.findIndex(c=>!c.isActive);
-  if(i!==-1){
-    const formatted=toTitleCase(ac.name);
-    cards[i]={...cards[i],name:formatted,allergens:[...ac.allergens],isActive:true,isSelected:false};
-    archivedCards=archivedCards.filter(c=>c.id!==ac.id);
-    renderCards();renderArchivedCards();
-  }else{alert('No empty slots available. Archive a card first.');}
-}
-function renderArchivedCards(){
-  const filtered=getFilteredArchivedCards();
-  archivedCardsContainer.innerHTML='';
-  if(filtered.length===0){archivedCardsContainer.innerHTML='<div style="padding:20px;text-align:center;color:#9ca3af;">No archived cards found</div>';return;}
-  filtered.forEach(c=>{
-    const allergenNames=c.allergens.map(id=>{const a=allergenOptions.find(o=>o.id===id);return a?a.name:'';}).filter(Boolean).join(', ');
-    const el=document.createElement('div');el.className='archived-card';
-    el.innerHTML=`
-      <div class="archived-card-info">
-        <div class="archived-card-name">${c.name}</div>
-        <div class="archived-card-allergens">${allergenNames||'No allergens'}</div>
-      </div>
-      <div class="archived-card-actions">
-        <button class="restore-btn" onclick="restoreCard(archivedCards.find(x=>x.id==='${c.id}'))">Restore</button>
-        <button class="delete-archived-btn" onclick="deleteArchivedCard('${c.id}')" title="Delete permanently"><i data-lucide="trash-2" size="10"></i></button>
-      </div>`;
-    archivedCardsContainer.appendChild(el);
-  });
-  initIcons();
-}
-function getFilteredArchivedCards(){
-  let f=[...archivedCards];
-  if(searchTerm){
-    f=f.filter(c=> c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.allergens.some(id=>{const a=allergenOptions.find(o=>o.id===id);return a&&a.name.toLowerCase().includes(searchTerm.toLowerCase());}));
-  }
-  switch(sortOrder){
-    case 'alphabetical': f.sort((a,b)=>a.name.localeCompare(b.name));break;
-    case 'allergen-count': f.sort((a,b)=>b.allergens.length-a.allergens.length);break;
-    case 'recent': default: f.sort((a,b)=>new Date(b.dateArchived)-new Date(a.dateArchived));break;
-  }
-  return f;
-}
-
-/* ---------- CSV ---------- */
-function exportCards(){
-  const csv=[['Name','Allergens','Date Archived'].join(','),...archivedCards.map(c=>[`"${c.name}"` , `"${c.allergens.join(';')}"` , `"${c.dateArchived.toISOString()}"`].join(','))].join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='archived_allergen_cards.csv';document.body.appendChild(a);a.click();
-  document.body.removeChild(a);URL.revokeObjectURL(url);
-}
-function importCards(e){
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    try{
-      const csv=ev.target.result, lines=csv.split('\n');
-      for(let i=1;i<lines.length;i++){
-        const line=lines[i].trim(); if(!line)continue;
-        const vals=line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-        if(vals&&vals.length>=2){
-          const name=vals[0].replace(/"/g,'');
-          const allergens=vals[1].replace(/"/g,'').split(';').filter(Boolean);
-          const dateArchived=vals[2]?new Date(vals[2].replace(/"/g,'')):new Date();
-          archivedCards.push({id:'arch_'+Date.now()+'_'+i,name,allergens,dateArchived});
+        // Initialize Lucide icons with fallback
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
-      }
-      renderArchivedCards(); alert('Cards imported successfully!');
-    }catch(err){ alert('Error importing file. Please check the format.'); }
-  };
-  reader.readAsText(file); e.target.value='';
-}
-
-/* ---------- Print (with branded header + short rule + max 2 rows icons) ---------- */
-function printCards(){
-  const selectedCards = cards.filter(c => c.isActive && c.isSelected);
-  if (selectedCards.length === 0) { alert('No cards selected for printing'); return; }
-
-  function generateCardHTML(card){
-    if(!card || !card.isActive) return '<div class="card empty-card"></div>';
-    const perRow = 5, maxIcons = 10;
-    const show = card.allergens.slice(0, maxIcons);
-    const rows = [];
-    for (let i = 0; i < show.length; i += perRow) {
-      const rowImgs = show.slice(i, i + perRow).map(id => {
-        const a = allergenOptions.find(o => o.id === id);
-        return a ? `<img src="png/${a.png}" alt="${a.name}" style="width:0.575in;height:0.575in;object-fit:contain;margin:1px;">` : '';
-      }).join('');
-      rows.push(`<div style="display:flex;justify-content:center;margin:1px 0;gap:1px;">${rowImgs}</div>`);
-    }
-    return `
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 6px 2px 6px;">
-          <div style="font-family:'Times New Roman',Times,serif;font-weight:700;letter-spacing:.04em;color:#6b7280;font-size:11pt;">SMITH COLLEGE</div>
-          <div style="font-family:Arial,Helvetica,sans-serif;font-weight:800;color:#6B8E23;font-size:12pt;">DINING</div>
-        </div>
-        <div style="height:1px;background:#d1d5db;width:85%;margin:2px auto 6px auto;"></div>
-        <div style="text-align:center;font-weight:bold;font-size:15pt;margin:0 4px 6px 4px;line-height:1.1;min-height:0.4in;display:flex;align-items:center;justify-content:center;">
-          ${card.name}
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;min-height:1.2in;">
-          ${rows.join('')}
-        </div>
-      </div>`;
-  }
-
-  const printHTML = `<!DOCTYPE html>
-  <html><head><title>Allergen Cards - Print</title>
-  <style>
-    @page { size: 8.5in 11in; margin: 0.5in; }
-    body { margin:0; padding:0; font-family: Arial, sans-serif; }
-    .print-container {
-      width:7.5in; height:10in; display:grid;
-      grid-template-columns:repeat(2,3.5in); grid-template-rows:repeat(5,2in);
-    }
-    .card { width:3.5in; height:2in; padding:8px; box-sizing:border-box; display:flex; flex-direction:column; page-break-inside:avoid; background:#fff; }
-    .empty-card { background:#f9f9f9; }
-  </style></head>
-  <body>
-    <div class="print-container">
-      ${Array(10).fill(null).map((_, i) => generateCardHTML(selectedCards[i] || null)).join('')}
-    </div>
-  </body></html>`;
-
-  const w = window.open('', '_blank');
-  w.document.write(printHTML);
-  w.document.close();
-  w.focus();
-
-  // Trigger print safely after the new document finishes loading
-  w.onload = () => setTimeout(() => w.print(), 150);
-}
-
-
-/* ---------- Events ---------- */
-modalDishName.addEventListener('input',e=>{
-  if(editingCard){editingCard.name=e.target.value;updateSaveButton();
-    clearTimeout(spellCheckTimeout);spellCheckTimeout=setTimeout(()=>{/* placeholder for spellcheck */},500);}
-});
-modalDishName.addEventListener('blur',()=>setTimeout(()=>{spellSuggestions.style.display='none';},200));
-modalDishName.addEventListener('focus',()=>{ if(modalDishName.value){ /* placeholder */ }});
-
-selectAllCheckbox.addEventListener('change',handleSelectAll);
-printBtn.addEventListener('click',printCards);
-modalClose.addEventListener('click',closeModal);
-saveBtn.addEventListener('click',saveCard);
-searchBox.addEventListener('input',e=>{searchTerm=e.target.value;renderArchivedCards();});
-sortSelect.addEventListener('change',e=>{sortOrder=e.target.value;renderArchivedCards();});
-exportBtn.addEventListener('click',exportCards);
-importBtn.addEventListener('click',()=>fileInput.click());
-fileInput.addEventListener('change',importCards);
-confirmCancel.addEventListener('click',cancelDeleteArchivedCard);
-confirmDelete.addEventListener('click',confirmDeleteArchivedCard);
-confirmDialog.addEventListener('click',e=>{if(e.target===confirmDialog)cancelDeleteArchivedCard();});
-modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-
-/* ---------- Init ---------- */
-renderCards();renderArchivedCards();updateSelectAllState();
-</script>
+        
+        // Wait for page to load, then initialize
+        window.addEventListener('load', function() {
+            setTimeout(initIcons, 100);
+        });
+        
+        // App state
+        let cards = Array(10).fill(null).map((_, index) => ({
+            id: index,
+            name: '',
+            allergens: [],
+            isActive: false,
+            isSelected: false
+        }));
+        
+        let archivedCards = [ ];
+        
+        let editingCard = null;
+        let isModalOpen = false;
+        let searchTerm = '';
+        let sortOrder = 'recent';
+        
+        const allergenOptions = [
+            { id: 'coconut', name: 'Coconut', icon: '🥥', png: 'coconut.png', color: 'bg-amber-50' },
+            { id: 'eggs', name: 'Eggs', icon: '🥚', png: 'egg.png', color: 'bg-yellow-100' },
+            { id: 'fish', name: 'Fish', icon: '🐟', png: 'fish.png', color: 'bg-cyan-100' },
+            { id: 'milk', name: 'Milk', icon: '🥛', png: 'milk.png', color: 'bg-blue-100' },
+            { id: 'peanuts', name: 'Peanuts', icon: '🥜', png: 'peanut.png', color: 'bg-orange-200' },
+            { id: 'sesame', name: 'Sesame', icon: '🫰', png: 'sesame.png', color: 'bg-purple-100' },
+            { id: 'shellfish', name: 'Shellfish', icon: '🦐', png: 'shellfish.png', color: 'bg-red-100' },
+            { id: 'soy', name: 'Soy', icon: '🫘', png: 'soy.png', color: 'bg-green-100' },
+            { id: 'treenuts', name: 'Tree Nuts', icon: '🌰', png: 'treenuts.png', color: 'bg-orange-100' },
+            { id: 'vegan', name: 'Vegan', icon: '🌱', png: 'vegan.png', color: 'bg-lime-100' },
+            { id: 'vegetarian', name: 'Vegetarian', icon: '🥬', png: 'vegetarian.png', color: 'bg-emerald-100' },
+            { id: 'wheat', name: 'Wheat/Gluten', icon: '🌾', png: 'wheatgluten.png', color: 'bg-amber-100' }
+        ];
+        
+        // DOM elements
+        const cardsGrid = document.getElementById('cardsGrid');
+        const printBtn = document.getElementById('printBtn');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const selectInfo = document.getElementById('selectInfo');
+        const searchBox = document.getElementById('searchBox');
+        const sortSelect = document.getElementById('sortSelect');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const fileInput = document.getElementById('fileInput');
+        const archivedCardsContainer = document.getElementById('archivedCards');
+        const modal = document.getElementById('modal');
+        const modalDishName = document.getElementById('modalDishName');
+        const modalAllergenGrid = document.getElementById('modalAllergenGrid');
+        const modalClose = document.getElementById('modalClose');
+        const saveBtn = document.getElementById('saveBtn');
+        const modalActions = document.getElementById('modalActions');
+        const spellSuggestions = document.getElementById('spellSuggestions');
+        const confirmDialog = document.getElementById('confirmDialog');
+        const confirmCancel = document.getElementById('confirmCancel');
+        const confirmDelete = document.getElementById('confirmDelete');
+        
+        let pendingDeleteCardId = null;
+        
+        // Functions
+        function createAllergenButton(allergen, isSelected, onClick) {
+            const button = document.createElement('button');
+            button.className = `allergen-btn ${isSelected ? 'selected ' + allergen.color : ''}`;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'allergen-checkbox';
+            checkbox.checked = isSelected;
+            
+            
+            const content = document.createElement('span');
+            content.innerHTML = `${allergen.icon} ${allergen.name}`;
+            
+            button.appendChild(checkbox);
+            button.appendChild(content);
+            button.onclick = onClick;
+            return button;
+        }
+        
+        function renderModalAllergenGrid() {
+            modalAllergenGrid.innerHTML = '';
+            allergenOptions.forEach(allergen => {
+                const isSelected = editingCard && editingCard.allergens.includes(allergen.id);
+                const button = createAllergenButton(allergen, isSelected, () => {
+                    handleAllergenToggle(allergen.id);
+                });
+                modalAllergenGrid.appendChild(button);
+            });
+        }
+        
+        function toTitleCase(str) {
+            const exceptions = ['and', 'or', 'but', 'nor', 'for', 'yet', 'so', 'a', 'an', 'the', 'at', 'by', 'for', 'in', 'of', 'on', 'to', 'up', 'as', 'is', 'it'];
+            
+            return str.toLowerCase().split(' ').map((word, index) => {
+                // Always capitalize first word and words not in exceptions list
+                if (index === 0 || !exceptions.includes(word)) {
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                }
+                return word;
+            }).join(' ');
+        }
+        
+        function renderCards() {
+            cardsGrid.innerHTML = '';
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = `card ${card.isActive ? 'active' : 'empty'} ${card.isSelected && card.isActive ? 'selected' : ''}`;
+                
+                // Create checkbox only for active cards
+                if (card.isActive) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'card-checkbox';
+                    checkbox.checked = card.isSelected;
+                    checkbox.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleCardSelection(index);
+                    });
+                    cardElement.appendChild(checkbox);
+                }
+                
+                // Add click handler for the card
+                cardElement.addEventListener('click', (e) => {
+                    // Only open modal if not clicking on checkbox
+                    if (!e.target.classList.contains('card-checkbox')) {
+                        openCardModal(index);
+                    }
+                });
+                
+                if (card.isActive) {
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'card-name';
+                    nameDiv.textContent = card.name;
+                    cardElement.appendChild(nameDiv);
+                    
+                    const allergensDiv = document.createElement('div');
+                    allergensDiv.className = 'card-allergens';
+                    allergensDiv.innerHTML = card.allergens.map(allergenId => {
+                        const allergen = allergenOptions.find(opt => opt.id === allergenId);
+                        return allergen ? `<span class="card-allergen-icon" title="${allergen.name}">${allergen.icon}</span>` : '';
+                    }).join('');
+                    cardElement.appendChild(allergensDiv);
+                    
+                    const editIconDiv = document.createElement('div');
+                    editIconDiv.className = 'card-edit-icon';
+                    editIconDiv.innerHTML = '<i data-lucide="edit-3" size="16"></i>';
+                    cardElement.appendChild(editIconDiv);
+                } else {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'card-empty';
+                    emptyDiv.innerHTML = `
+                        <i data-lucide="plus" size="32"></i>
+                        <span style="font-size: 0.75rem; text-align: center; margin-top: 8px;">Click to add card</span>
+                    `;
+                    cardElement.appendChild(emptyDiv);
+                }
+                
+                cardsGrid.appendChild(cardElement);
+            });
+            initIcons();
+            updateSelectionInfo();
+        }
+        
+        function toggleCardSelection(index) {
+            // Only toggle if card is active
+            if (cards[index].isActive) {
+                cards[index].isSelected = !cards[index].isSelected;
+                renderCards();
+                updateSelectAllState();
+            }
+        }
+        
+        function updateSelectionInfo() {
+            const selectedCount = cards.filter(card => card.isActive && card.isSelected).length;
+            const activeCount = cards.filter(card => card.isActive).length;
+            
+            if (selectedCount === 0) {
+                selectInfo.textContent = 'Check cards to include in print';
+                printBtn.disabled = true;
+            } else {
+                selectInfo.textContent = `${selectedCount} of ${activeCount} cards selected`;
+                printBtn.disabled = false;
+            }
+        }
+        
+        function updateSelectAllState() {
+            const activeCards = cards.filter(card => card.isActive);
+            const selectedActiveCards = activeCards.filter(card => card.isSelected);
+            
+            if (selectedActiveCards.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (selectedActiveCards.length === activeCards.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+            
+            updateSelectionInfo();
+        }
+        
+        function handleSelectAll() {
+            const activeCards = cards.filter(card => card.isActive);
+            const allSelected = activeCards.every(card => card.isSelected);
+            
+            cards.forEach(card => {
+                if (card.isActive) {
+                    card.isSelected = !allSelected;
+                }
+            });
+            
+            renderCards();
+            updateSelectAllState();
+        }
+        
+        function handleAllergenToggle(allergenId) {
+            if (editingCard.allergens.includes(allergenId)) {
+                editingCard.allergens = editingCard.allergens.filter(id => id !== allergenId);
+            } else {
+                editingCard.allergens.push(allergenId);
+            }
+            renderModalAllergenGrid();
+            updateSaveButton();
+        }
+        
+        function updateSaveButton() {
+            saveBtn.disabled = !editingCard || !editingCard.name.trim();
+        }
+        
+        function openCardModal(cardIndex) {
+            const card = cards[cardIndex];
+            editingCard = {
+                ...card,
+                allergens: [...card.allergens],
+                index: cardIndex
+            };
+            
+            modalDishName.value = editingCard.name;
+            
+            // Render action buttons
+            modalActions.innerHTML = '';
+            if (editingCard.isActive) {
+                const archiveBtn = document.createElement('button');
+                archiveBtn.className = 'btn-secondary';
+                archiveBtn.innerHTML = '<i data-lucide="archive"></i> Archive';
+                archiveBtn.onclick = archiveCard;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-danger';
+                deleteBtn.innerHTML = '<i data-lucide="trash-2"></i> Delete';
+                deleteBtn.onclick = deleteCard;
+                
+                modalActions.appendChild(archiveBtn);
+                modalActions.appendChild(deleteBtn);
+            }
+            
+            renderModalAllergenGrid();
+            updateSaveButton();
+            modal.classList.remove('hidden');
+            isModalOpen = true;
+            initIcons();
+        }
+        
+        function closeModal() {
+            modal.classList.add('hidden');
+            isModalOpen = false;
+            editingCard = null;
+        }
+        
+        function saveCard() {
+            if (!editingCard || !editingCard.name.trim()) return;
+            
+            // Apply title case formatting
+            const formattedName = toTitleCase(editingCard.name.trim());
+            
+            cards[editingCard.index] = {
+                ...cards[editingCard.index],
+                name: formattedName,
+                allergens: [...editingCard.allergens],
+                isActive: true
+            };
+            
+            renderCards();
+            closeModal();
+        }
+        
+        function archiveCard() {
+            const card = cards[editingCard.index];
+            if (card.isActive) {
+                // Add to archived cards
+                archivedCards.unshift({
+                    id: 'arch_' + Date.now(),
+                    name: card.name,
+                    allergens: [...card.allergens],
+                    dateArchived: new Date()
+                });
+                
+                // Clear the active card
+                cards[editingCard.index] = {
+                    id: editingCard.index,
+                    name: '',
+                    allergens: [],
+                    isActive: false,
+                    isSelected: false
+                };
+                
+                renderCards();
+                renderArchivedCards();
+            }
+            closeModal();
+        }
+        
+        function deleteCard() {
+            cards[editingCard.index] = {
+                id: editingCard.index,
+                name: '',
+                allergens: [],
+                isActive: false,
+                isSelected: false
+            };
+            
+            renderCards();
+            closeModal();
+        }
+        
+        function deleteArchivedCard(cardId) {
+            pendingDeleteCardId = cardId;
+            confirmDialog.classList.remove('hidden');
+        }
+        
+        function confirmDeleteArchivedCard() {
+            if (pendingDeleteCardId) {
+                archivedCards = archivedCards.filter(card => card.id !== pendingDeleteCardId);
+                renderArchivedCards();
+                pendingDeleteCardId = null;
+            }
+            confirmDialog.classList.add('hidden');
+        }
+        
+        function cancelDeleteArchivedCard() {
+            pendingDeleteCardId = null;
+            confirmDialog.classList.add('hidden');
+        }
+        
+        function restoreCard(archivedCard) {
+            const emptySlotIndex = cards.findIndex(card => !card.isActive);
+            if (emptySlotIndex !== -1) {
+                // Apply title case formatting when restoring
+                const formattedName = toTitleCase(archivedCard.name);
+                
+                cards[emptySlotIndex] = {
+                    ...cards[emptySlotIndex],
+                    name: formattedName,
+                    allergens: [...archivedCard.allergens],
+                    isActive: true,
+                    isSelected: false
+                };
+                
+                // Remove from archived cards
+                archivedCards = archivedCards.filter(card => card.id !== archivedCard.id);
+                
+                renderCards();
+                renderArchivedCards();
+            } else {
+                alert('No empty slots available. Archive a card first.');
+            }
+        }
+        
+        function showAlert(message) {
+            // Custom alert function - for now using browser alert, but this could be enhanced
+            alert(message);
+        }
+        
+        function renderArchivedCards() {
+            const filteredCards = getFilteredArchivedCards();
+            archivedCardsContainer.innerHTML = '';
+            
+            if (filteredCards.length === 0) {
+                archivedCardsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No archived cards found</div>';
+                return;
+            }
+            
+            filteredCards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'archived-card';
+                
+                const allergenNames = card.allergens.map(id => {
+                    const allergen = allergenOptions.find(opt => opt.id === id);
+                    return allergen ? allergen.name : '';
+                }).filter(name => name).join(', ');
+                
+                cardElement.innerHTML = `
+                    <div class="archived-card-info">
+                        <div class="archived-card-name">${card.name}</div>
+                        <div class="archived-card-allergens">${allergenNames || 'No allergens'}</div>
+                    </div>
+                    <div class="archived-card-actions">
+                        <button class="restore-btn" onclick="restoreCard(archivedCards.find(c => c.id === '${card.id}'))">
+                            Restore
+                        </button>
+                        <button class="delete-archived-btn" onclick="deleteArchivedCard('${card.id}')" title="Delete permanently">
+                            <i data-lucide="trash-2" size="10"></i>
+                        </button>
+                    </div>
+                `;
+                
+                archivedCardsContainer.appendChild(cardElement);
+            });
+            initIcons(); // Re-initialize icons after rendering
+        }
+        
+        function getFilteredArchivedCards() {
+            let filtered = [...archivedCards];
+            
+            // Filter by search term
+            if (searchTerm) {
+                filtered = filtered.filter(card => 
+                    card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    card.allergens.some(allergenId => {
+                        const allergen = allergenOptions.find(opt => opt.id === allergenId);
+                        return allergen && allergen.name.toLowerCase().includes(searchTerm.toLowerCase());
+                    })
+                );
+            }
+            
+            // Sort
+            switch (sortOrder) {
+                case 'alphabetical':
+                    filtered.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'allergen-count':
+                    filtered.sort((a, b) => b.allergens.length - a.allergens.length);
+                    break;
+                case 'recent':
+                default:
+                    filtered.sort((a, b) => new Date(b.dateArchived) - new Date(a.dateArchived));
+                    break;
+            }
+            
+            return filtered;
+        }
+        
+        function exportCards() {
+            const csvContent = [
+                ['Name', 'Allergens', 'Date Archived'].join(','),
+                ...archivedCards.map(card => [
+                    `"${card.name}"`,
+                    `"${card.allergens.join(';')}"`,
+                    `"${card.dateArchived.toISOString()}"`
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'archived_allergen_cards.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function importCards(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    const headers = lines[0].split(',');
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                        if (values && values.length >= 2) {
+                            const name = values[0].replace(/"/g, '');
+                            const allergens = values[1].replace(/"/g, '').split(';').filter(a => a);
+                            const dateArchived = values[2] ? new Date(values[2].replace(/"/g, '')) : new Date();
+                            
+                            archivedCards.push({
+                                id: 'arch_' + Date.now() + '_' + i,
+                                name: name,
+                                allergens: allergens,
+                                dateArchived: dateArchived
+                            });
+                        }
+                    }
+                    
+                    renderArchivedCards();
+                    showAlert('Cards imported successfully!');
+                } catch (error) {
+                    showAlert('Error importing file. Please check the format.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+        
+        function printCards() {
+            const selectedCards = cards.filter(card => card.isActive && card.isSelected);
+            
+            if (selectedCards.length === 0) {
+                showAlert('No cards selected for printing');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            
+            function generateCardHTML(card) {
+                if (!card || !card.isActive) {
+                    return '<div class="card empty-card"></div>';
+                }
+                
+                const imagesPerRow = 5;
+                const allergenRows = [];
+                
+                for (let i = 0; i < card.allergens.length; i += imagesPerRow) {
+                    const rowImages = card.allergens.slice(i, i + imagesPerRow).map(id => {
+                        const allergen = allergenOptions.find(opt => opt.id === id);
+                        // Increased image size from 0.35in to 0.44in (25% larger)
+                        return allergen ? `<img src="png/${allergen.png}" alt="${allergen.name}" style="width: 0.575in; height: 0.575in; object-fit: contain; margin: 1px;">` : '';
+                    }).join('');
+                    allergenRows.push(`<div style="display: flex; justify-content: center; margin: 1px 0; gap: 1px;">${rowImages}</div>`);
+                }
+                
+                return `
+                    <div class="card" style="padding-left: 12px; padding-right: 8px;">
+                        <div style="text-align: center; font-weight: bold; font-size: 15pt; margin-bottom: 4px; padding: 0 4px; line-height: 1.1; min-height: 0.4in; display: flex; align-items: center; justify-content: center;">
+                            ${card.name}
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 1.4in;">
+                            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; gap: 4px;">
+                                ${allergenRows.join('')}
+                            </div>
+                            <div style="font-size: 9pt; font-weight: 600; color: #555; text-align: right; margin-top: 1px; margin-bottom: 2px;">
+                                Smith College Dining
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const printHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Allergen Cards - Print</title>
+                    <style>
+                        @page {
+                            size: 8.5in 11in;
+                            margin: 0.5in;
+                        }
+                        
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: Arial, sans-serif;
+                        }
+                        
+                        .print-container {
+                            width: 7.5in;
+                            height: 10in;
+                            display: grid;
+                            grid-template-columns: repeat(2, 3.5in);
+                            grid-template-rows: repeat(5, 2in);
+                            gap: 0;
+                            margin: 0 auto;
+                        }
+                        
+                        .card {
+                            width: 3.5in;
+                            height: 2in;
+                            /* border removed */
+                            padding: 8px;
+                            box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
+                            page-break-inside: avoid;
+                            display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+                        }
+                        
+                        .empty-card {
+                            /* dashed border removed */
+                            background: #f9f9f9;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-container">
+                        ${Array(10).fill(null).map((_, index) => {
+                            const card = selectedCards[index] || null;
+                            return generateCardHTML(card);
+                        }).join('')}
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 1000);
+        }
+        
+        // Event listeners
+        modalDishName.addEventListener('input', (e) => {
+            if (editingCard) {
+                editingCard.name = e.target.value;
+                updateSaveButton();
+                
+                // Debounced spell checking
+                clearTimeout(spellCheckTimeout);
+                spellCheckTimeout = setTimeout(() => {
+                    checkSpelling(e.target.value);
+                }, 500);
+            }
+        });
+        
+        modalDishName.addEventListener('blur', () => {
+            // Hide suggestions when input loses focus (with a small delay for clicking)
+            setTimeout(() => {
+                spellSuggestions.style.display = 'none';
+            }, 200);
+        });
+        
+        modalDishName.addEventListener('focus', () => {
+            // Re-check spelling when input gains focus
+            if (modalDishName.value) {
+                checkSpelling(modalDishName.value);
+            }
+        });
+        
+        selectAllCheckbox.addEventListener('change', handleSelectAll);
+        printBtn.addEventListener('click', printCards);
+        modalClose.addEventListener('click', closeModal);
+        saveBtn.addEventListener('click', saveCard);
+        
+        searchBox.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderArchivedCards();
+        });
+        
+        sortSelect.addEventListener('change', (e) => {
+            sortOrder = e.target.value;
+            renderArchivedCards();
+        });
+        
+        exportBtn.addEventListener('click', exportCards);
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', importCards);
+        
+        // Confirmation dialog event listeners
+        confirmCancel.addEventListener('click', cancelDeleteArchivedCard);
+        confirmDelete.addEventListener('click', confirmDeleteArchivedCard);
+        
+        // Close confirmation dialog on backdrop click
+        confirmDialog.addEventListener('click', (e) => {
+            if (e.target === confirmDialog) {
+                cancelDeleteArchivedCard();
+            }
+        });
+        
+        // Close modal on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Initialize
+        renderCards();
+        renderArchivedCards();
+        updateSelectAllState();
+    </script>
 </body>
 </html>
+
