@@ -465,62 +465,64 @@ function importCards(e){
 
 /* ---------- Print (with branded header + short rule + max 2 rows icons) ---------- */
 function printCards(){
-  const selectedCards=cards.filter(c=>c.isActive&&c.isSelected);
-  if(selectedCards.length===0){alert('No cards selected for printing');return;}
+  const selectedCards = cards.filter(c => c.isActive && c.isSelected);
+  if (selectedCards.length === 0) { alert('No cards selected for printing'); return; }
 
   function generateCardHTML(card){
-    if(!card||!card.isActive) return '<div class="card empty-card"></div>';
-
-    const perRow=5, maxIcons=10;
-    const show=card.allergens.slice(0,maxIcons);
-    const rows=[];
-    for(let i=0;i<show.length;i+=perRow){
-      const rowImgs=show.slice(i,i+perRow).map(id=>{
-        const a=allergenOptions.find(o=>o.id===id);
-        return a? `<img src="png/${a.png}" alt="${a.name}" style="width:0.575in;height:0.575in;object-fit:contain;margin:1px;">`:'';
+    if(!card || !card.isActive) return '<div class="card empty-card"></div>';
+    const perRow = 5, maxIcons = 10;
+    const show = card.allergens.slice(0, maxIcons);
+    const rows = [];
+    for (let i = 0; i < show.length; i += perRow) {
+      const rowImgs = show.slice(i, i + perRow).map(id => {
+        const a = allergenOptions.find(o => o.id === id);
+        return a ? `<img src="png/${a.png}" alt="${a.name}" style="width:0.575in;height:0.575in;object-fit:contain;margin:1px;">` : '';
       }).join('');
       rows.push(`<div style="display:flex;justify-content:center;margin:1px 0;gap:1px;">${rowImgs}</div>`);
     }
-
     return `
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 6px 2px 6px;">
-        <div style="font-family:'Times New Roman',Times,serif;font-weight:700;letter-spacing:.04em;color:#6b7280;font-size:11pt;">SMITH COLLEGE</div>
-        <div style="font-family:Arial,Helvetica,sans-serif;font-weight:800;color:#6B8E23;font-size:12pt;">DINING</div>
-      </div>
-      <div style="height:1px;background:#d1d5db;width:85%;margin:2px auto 6px auto;"></div>
-
-      <div style="text-align:center;font-weight:bold;font-size:15pt;margin:0 4px 6px 4px;line-height:1.1;min-height:0.4in;display:flex;align-items:center;justify-content:center;">
-        ${card.name}
-      </div>
-
-      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;min-height:1.2in;">
-        ${rows.join('')}
-      </div>
-    </div>`;
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 6px 2px 6px;">
+          <div style="font-family:'Times New Roman',Times,serif;font-weight:700;letter-spacing:.04em;color:#6b7280;font-size:11pt;">SMITH COLLEGE</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-weight:800;color:#6B8E23;font-size:12pt;">DINING</div>
+        </div>
+        <div style="height:1px;background:#d1d5db;width:85%;margin:2px auto 6px auto;"></div>
+        <div style="text-align:center;font-weight:bold;font-size:15pt;margin:0 4px 6px 4px;line-height:1.1;min-height:0.4in;display:flex;align-items:center;justify-content:center;">
+          ${card.name}
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;min-height:1.2in;">
+          ${rows.join('')}
+        </div>
+      </div>`;
   }
 
-  const printHTML=`<!DOCTYPE html>
+  const printHTML = `<!DOCTYPE html>
   <html><head><title>Allergen Cards - Print</title>
   <style>
     @page { size: 8.5in 11in; margin: 0.5in; }
-    body{margin:0;padding:0;font-family:Arial,sans-serif}
-    .print-container{
-      width:7.5in;height:10in;display:grid;
-      grid-template-columns:repeat(2,3.5in);grid-template-rows:repeat(5,2in);
+    body { margin:0; padding:0; font-family: Arial, sans-serif; }
+    .print-container {
+      width:7.5in; height:10in; display:grid;
+      grid-template-columns:repeat(2,3.5in); grid-template-rows:repeat(5,2in);
     }
-    .card{width:3.5in;height:2in;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;page-break-inside:avoid;background:#fff}
-    .empty-card{background:#f9f9f9}
+    .card { width:3.5in; height:2in; padding:8px; box-sizing:border-box; display:flex; flex-direction:column; page-break-inside:avoid; background:#fff; }
+    .empty-card { background:#f9f9f9; }
   </style></head>
   <body>
     <div class="print-container">
-      ${Array(10).fill(null).map((_,i)=>generateCardHTML(selectedCards[i]||null)).join('')}
+      ${Array(10).fill(null).map((_, i) => generateCardHTML(selectedCards[i] || null)).join('')}
     </div>
-    <script>window.onload=()=>setTimeout(()=>window.print(),150);</script>
   </body></html>`;
 
-  const w=window.open('','_blank'); w.document.write(printHTML); w.document.close(); w.focus();
+  const w = window.open('', '_blank');
+  w.document.write(printHTML);
+  w.document.close();
+  w.focus();
+
+  // Trigger print safely after the new document finishes loading
+  w.onload = () => setTimeout(() => w.print(), 150);
 }
+
 
 /* ---------- Events ---------- */
 modalDishName.addEventListener('input',e=>{
