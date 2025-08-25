@@ -355,6 +355,8 @@
 
     renderModalAllergenGrid(); updateSaveButton();
     modal.classList.remove('hidden'); isModalOpen=true; initIcons();
+    // UX: focus/select existing text
+    setTimeout(()=>{ modalDishName.focus(); modalDishName.select(); }, 0);
   }
   function closeModal(){ modal.classList.add('hidden'); isModalOpen=false; editingCard=null; }
   function saveCard(){
@@ -444,10 +446,10 @@
     const r=new FileReader();
     r.onload=function(ev){
       try{
-        const lines=ev.target.result.split('\n');
+        const lines=ev.target.result.split('\\n');
         for(let i=1;i<lines.length;i++){
           const line=lines[i].trim(); if(!line) continue;
-          const vals=line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+          const vals=line.match(/(".*?"|[^,]+)(?=\\s*,|\\s*$)/g);
           if(vals && vals.length>=2){
             const name=vals[0].replace(/"/g,'');
             const allergens=vals[1].replace(/"/g,'').split(';').filter(Boolean);
@@ -553,6 +555,14 @@
   exportBtn.addEventListener('click', exportCards);
   importBtn.addEventListener('click', ()=> fileInput.click());
   fileInput.addEventListener('change', importCards);
+
+  // FIX: keep editingCard.name in sync so Save works
+  modalDishName.addEventListener('input', (e) => {
+    if (editingCard) {
+      editingCard.name = e.target.value;
+      updateSaveButton();
+    }
+  });
 
   confirmCancel.addEventListener('click', cancelDeleteArchivedCard);
   confirmDelete.addEventListener('click', confirmDeleteArchivedCard);
